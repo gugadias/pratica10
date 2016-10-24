@@ -14,10 +14,20 @@ void *calcula_tempo_restante(void *x_void_ptr)
 
     //tempo que falta pra terminar a copia
     int remaining;
+    int quantoLeuEmUmSeg;
+    int prim = 1;
+    int tempoCorrido = 0; //quantos segundos de espera foram
 
     while(!x_ptr[3]) {
         Sleep(1000); //sleep 1 seg para dar a proxima estimativa
-        remaining = (x_ptr[1]*x_ptr[2])/ (x_ptr[0]); //tempo remanescente = (quantosFaltam * tempoCorrido) / (lidos)
+        tempoCorrido++;
+
+        quantoLeuEmUmSeg += x_ptr[0]; //quantos leu no segundo que foi corrido
+
+        remaining = x_ptr[1] /(quantoLeuEmUmSeg/tempoCorrido); //tempo remanescente =
+                                        //(quantos lidos / (quantosLidos / tempoCorrido))
+
+        x_ptr[0] = 0; //reseta lidos em um segundo
         printf("\nTime remaining: %d",remaining);
     }
 
@@ -34,7 +44,7 @@ int main(int argc, char *argv[])
     char* arquivo = argv[2]; //nome do arquivo de origem
     char* destino = argv[3]; //nome do arquivo de destino
 
-    parametrosThread[0] = 0; //lidos
+    parametrosThread[0] = 0; //quantos lidos em um segundo
     parametrosThread[1] = 0; //quantosFaltam
     parametrosThread[2] = 0; //tempoCorrido
     parametrosThread[3] = 0; //terminou
@@ -71,9 +81,9 @@ int main(int argc, char *argv[])
 
     //enquanto tem coisa do arquivo pra ler
     while(bytes_read > 0) {
-        parametrosThread[0] += bytes_read; //total de bytes lidos
-        parametrosThread[1] = size - parametrosThread[0]; //quantos bytes faltam
-        parametrosThread[2] = (clock() - begin)/CLOCKS_PER_SEC; //quanto tempo foi corrido ja
+        parametrosThread[0] += bytes_read; //total de bytes lidos em um segundo
+        parametrosThread[2] += bytes_read; //total de bytes lidos
+        parametrosThread[1] = size - parametrosThread[2]; //quantos bytes faltam
         fwrite(buffer, 1, sizeof(unsigned char) * bytes_read, arqSaida);
         bytes_read = fread(buffer, sizeof(unsigned char), BUFFER_SIZE, arqEntrada);
     }
